@@ -3,20 +3,32 @@
 require_relative "lib/database_connection"
 require_relative "lib/album_repository"
 
-# We need to give the database name to the method `connect`.
-DatabaseConnection.connect("music_library")
+class Application
+  def initialize(music_library, io, album_repository)
+    DatabaseConnection.connect(music_library)
+    @io = io
+    @album_repository = album_repository
+  end
 
-album_repository = AlbumRepository.new
+  def run
+    @io.puts "What would you like to do?"
+    @io.puts "1 - List all albums"
+    choice = @io.gets.chomp
 
-# Perform a SQL query on the database and get the result set.
-sql = "SELECT id, title FROM albums;"
-result = DatabaseConnection.exec_params(sql, [])
+    if choice == "1"
+      result = @album_repository.all
+      result.each do |record|
+        p "#{record.id} : #{record.title}"
+      end
+    end
+  end
 
-# Print out each record from the result set .
-result.each do |record|
-  p record
-end
-
-album_repository.all.each do |album|
-  p album
+  if __FILE__ == $0
+    app = Application.new(
+      "music_library",
+      Kernel,
+      AlbumRepository.new
+    )
+    app.run
+  end
 end
